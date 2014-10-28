@@ -1,46 +1,102 @@
+
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-    <title>TW</title>
-    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-    <script src="mymap.js"></script>
+<head>
+	<title>Leaflet Quick Start Guide Example</title>
+	<meta charset="utf-8" />
 
-    <link type="text/css" rel="stylesheet" href="colorbrewer.css"/>
-    <style>
-#taiwan path {
-  stroke-width: 1.5px;
-  stroke: #fff;
-}
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-#taiwan .active {
-  fill: steelblue;
-}
+  <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.css">
+  <style>
+    body {
+      padding-top: 20px;
+    }
+  </style>
 
-#taiwan line.show {
-   stroke: gray;
-}
+  <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.min.js"></script>
+  <script src="http://tombatossals.github.io/angular-leaflet-directive/dist/angular-leaflet-directive.min.js"></script>
+</head>
+<body>
+  <div class="container" ng-app="tw-location-selector">
+    <div class="row" ng-controller="GeoJSONController">
+      <div class="col-md-8">
+        <div>
+          <div>
+           <leaflet width="100%" height="720px" center="taiwan" geojson="geojson" defaults="defaults"></leaflet>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="alert alert-warning" role="alert">
+          {{hover_town.name}}
+        </div>
+        <hr>
+        <div class="alert alert-info" role="alert" ng-repeat="town in selected_towns">
+          <button type="button" class="close" ng-click="delete_town($index)"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          {{town.name}}
+        </div>
+      </div>
+    <div>
+  </div>
 
-rect.background {
-  fill: white;            
-}
-</style>
+  <script>
+    var app = angular.module("tw-location-selector", ["leaflet-directive"]);
 
- </head>
-  <body>
-<h1>GeoJSON data for Taiwan Administrative Divisions</h1>
-<div id="nav">
-    <span id="scale">scale</span>
-    <span id="restore">restore</span>
-    <span id="showlinks">links</span>
-    <a href="map.html">demo with map</a>
-    <a href="3dmap2.html">demo with WebGL</a>
-    <a href="topojson.html">demo for topojson</a>
-    <a href="http://github.com/g0v/twgeojson">github</a>
-    <a href="https://github.com/g0v/twgeojson/blob/gh-pages/mymap.ls">source</a>
-</div>
-    <script type="text/javascript">
-        mymap();
-    </script>
-  </body>
+    app.controller("GeoJSONController", [ '$scope', '$http', function($scope, $http) {
+
+      angular.extend($scope, {
+        taiwan: {
+          lat: 23.58412603264412,
+          lng: 121.13525390625,
+          zoom: 7.5
+        },
+        defaults: {
+          scrollWheelZoom: false,
+          crs: 'Simple'
+        }
+      });
+
+      $scope.hover_town = "無";
+      $scope.selected_towns = [];
+      $scope.delete_town = function(index) {
+        $scope.selected_towns.splice(index, 1);
+      };
+
+      $scope.$on("leafletDirectiveMap.geojsonMouseover", function(ev, leafletEvent) {
+        $scope.hover_town = {
+          name: leafletEvent.target.feature.properties.name
+        };
+      });
+
+      $scope.$on("leafletDirectiveMap.geojsonClick", function(ev, featureSelected, leafletEvent) {
+        $scope.selected_towns.push({
+          name: leafletEvent.target.feature.properties.name
+        });
+      });
+
+      // Get the countries geojson data from a JSON
+      $http.get("twTown1982.geo.json").success(function(data, status) {
+          angular.extend($scope, {
+              geojson: {
+                  data: data,
+                  style: {
+                      fillColor: "green",
+                      weight: 2,
+                      opacity: 1,
+                      color: 'white',
+                      dashArray: '3',
+                      fillOpacity: 0.7
+                  }
+              }
+          });
+      });
+    }]);
+
+
+  </script>
+</body>
 </html>
